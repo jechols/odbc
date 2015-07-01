@@ -231,10 +231,16 @@ func (c *BindableColumn) Value(h api.SQLHSTMT, idx int) (driver.Value, error) {
 		}
 	}
 	if c.Len.IsNull() {
-		// Return 0 for numbers.  This is technically wrong, but NULL seems to break things.
+		// Return various empty types for null data.  This is technically wrong,
+		// but NULL for some reason causes all fields after a null field to end up
+		// with the empty value.
 		switch c.CType {
 		case api.SQL_C_LONG, api.SQL_C_SBIGINT, api.SQL_C_DOUBLE:
 			return 0, nil
+		case api.SQL_C_TYPE_TIMESTAMP, api.SQL_C_DATE:
+			return time.Time{}, nil
+		case api.SQL_C_CHAR, api.SQL_C_WCHAR:
+			return "", nil
 		default:
 			return nil, nil
 		}
